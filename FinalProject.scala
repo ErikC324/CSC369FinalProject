@@ -35,6 +35,9 @@ object App {
 
     print(slope, intercept)
 
+    // Add more summary statistics such as median and quartiles
+    // Larger dataset (Spec says data should warrant the use of scala)
+
 // Real regression equation from online calculator:  ŷ = 0.00166X + 0.27504
 
 //    Sum of X = 155003
