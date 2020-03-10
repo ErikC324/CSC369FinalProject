@@ -1,9 +1,10 @@
-package example
+//package example
 
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.io._
+import scala.io.StdIn.readLine
 
 object App {
 
@@ -32,26 +33,9 @@ object App {
       }
     }
 
-    def findMedian_Float (values : List[Float]): Float =
-    {
-      if (values.length % 2 == 0)
-      {
-        val right = values.length / 2
-        val left = values.length / 2 - 1
-        val median = (values(left) + values(right))/2
-        return median
-      }
+    val data = sc.textFile("newFlights.csv").map(line => (line.split(",").head.toInt, line.split(",")(1).toInt))
 
-      else
-      {
-        val median = values(values.length / 2)
-        return median
-      }
-    }
-
-    val data = sc.textFile("data.txt").map(line => (line.split(",").head.toInt, line.split(",")(1).toFloat))
-
-    val n = Source.fromFile("data.txt").getLines.length
+    val n = Source.fromFile("newFlights.csv").getLines.length
 
     val x_mean = data.map(x => x._1).mean()
     val y_mean = data.map(y => y._2).mean()
@@ -63,8 +47,12 @@ object App {
     val x_median = findMedian_Int(x_as_list)
 
     val y_as_list = data.map(y => y._2).collect().sortBy(y => y).toList
-    val y_median = findMedian_Float(y_as_list)
+    val y_median = findMedian_Int(y_as_list)
 
+    println("Number of Observations: " + n)
+    println("x = Air Time")
+    println("y = Distance")
+    println("")
 
     println("Summary Statistics of x:")
     println("Mean of x: " + x_mean)
@@ -96,15 +84,29 @@ object App {
     val slope = r * (y_sd / x_sd)
     val intercept = y_mean - slope*x_mean
 
-    println(slope, intercept)
-    println("predicted GPA = " + slope + "(SAT score) + " + intercept)
+    println("Correlation: " + r)
+    println("R-squared: " + r*r)
+
+    println("predicted Distance = " + slope + "(Air Time) + " + intercept)
 
     val std_err_slope_numerator = data.map(y => math.pow(y._2 - (slope * y._2 + intercept), 2)).sum()
     val std_err_slope_denominator = data.map(x => math.pow(x._1 - x_mean, 2)).sum()
     val std_err_slope = math.sqrt((1.0/(n-2)) * (std_err_slope_numerator/std_err_slope_denominator))
 
-    println("Standard Error of the Slope: " + std_err_slope)
+    val t_star = 1.96020124
 
+    println("Standard Error of the Slope: " + std_err_slope)
+    println("95% Confidence Interval: " + "(" + (slope - (t_star * std_err_slope)) + " , " + (slope + (t_star * std_err_slope)) + ")")
+
+    println("")
+    println("")
+
+//    val input_x = readLine("What was your SAT score? ")
+//    println(input_x)
+//
+//    val std_err_pred = 1 + (1.0/n) + (math.pow(input_x.toInt - x_mean, 2)/((n-1) * math.pow(x_sd, 2)))
+//    val yhat = slope * input_x.toInt + intercept
+//    println("95% Confidence Prediction Interval: " + "(" + (yhat - (t_star * std_err_pred)) + " , " + (yhat + (t_star * std_err_pred)) + ")")
 
 
 
